@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CompanyType {
+  IMPORTER
+  EXPORTER
+  BOTH
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum LeadSource {
+  CUSTOMS_DATA
+  GOOGLE_MAPS
+  LINKEDIN
+  MANUAL
+  APOLLO
+  TRADE_ATLAS
+  CSV_IMPORT
+}
+
+enum ActivityType {
+  EMAIL
+  CALL
+  MEETING
+  WHATSAPP
+  NOTE
+}
+
+model Company {
+  id              String      @id @default(cuid())
+  name            String
+  website         String?
+  country         String
+  city            String?
+  region          String?
+  type            CompanyType
+  status          LeadStatus  @default(NEW)
+  source          LeadSource
+  hsCodes         String[]
+  annualVolumeUsd Float?
+  employeeCount   Int?
+  description     String?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  contacts   Contact[]
+  shipments  Shipment[]
+  activities Activity[]
+  tags       CompanyTag[]
+
+  @@index([country])
+  @@index([status])
+  @@index([type])
+  @@index([source])
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  companyId String
+  firstName String
+  lastName  String?
+  email     String?
+  phone     String?
+  linkedIn  String?
+  title     String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  activities Activity[]
+
+  @@index([companyId])
+  @@index([email])
+}
+
+model Shipment {
+  id                 String     @id @default(cuid())
+  companyId          String
+  date               DateTime
+  product            String
+  hsCode             String
+  quantity           Float?
+  unit               String?
+  valueUsd           Float?
+  originCountry      String?
+  destinationCountry String?
+  portOfLoading      String?
+  portOfDischarge    String?
+  source             LeadSource
+  rawData            Json?
+  createdAt          DateTime   @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([hsCode])
+  @@index([date])
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  companyId   String
+  contactId   String?
+  type        ActivityType
+  notes       String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  company Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact Contact? @relation(fields: [contactId], references: [id])
+
+  @@index([companyId])
+}
+
+model Tag {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  color     String       @default("#6366f1")
+  companies CompanyTag[]
+}
+
+model CompanyTag {
+  companyId String
+  tagId     String
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, tagId])
+}
