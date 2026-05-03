@@ -1,28 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-interface ApolloPerson {
+interface HunterEmail {
+  value?: string;
   first_name?: string;
   last_name?: string;
-  email?: string;
-  title?: string;
-  linkedin_url?: string;
-  organization?: { website_url?: string; name?: string };
+  position?: string;
+  confidence?: number;
 }
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const apiKey = process.env.APOLLO_API_KEY;
+  const apiKey = process.env.HUNTER_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: "APOLLO_API_KEY no configurada" }, { status: 400 });
+    return NextResponse.json({ error: "HUNTER_API_KEY no configurada" }, { status: 400 });
   }
 
-  // Get companies with website but no primary contact with email
   const companies = await prisma.company.findMany({
     where: {
       website: { not: null },
@@ -33,7 +31,10 @@ export async function POST(req: NextRequest) {
   });
 
   if (companies.length === 0) {
-    return NextResponse.json({ message: "No hay empresas que enriquecer (necesitan tener web y no tener email de contacto)", enriched: 0 });
+    return NextResponse.json({
+      message: "No hay empresas que enriquecer (necesitan tener web y no tener email de contacto)",
+      enriched: 0,
+    });
   }
 
   let enriched = 0;
@@ -42,47 +43,36 @@ export async function POST(req: NextRequest) {
     const domain = extractDomain(company.website!);
     if (!domain) continue;
 
-    const resp = await fetch("https://api.apollo.io/v1/mixed_people/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        api_key: apiKey,
-        q_organization_domains: [domain],
-        page: 1,
-        per_page: 5,
-        person_titles: ["CEO", "Director", "Manager", "Sales", "Export", "Import", "Commercial"],
-      }),
-    });
+    const url = new URL("https://api.hunter.io/v2/domain-search");
+    url.searchParams.set("domain", domain);
+    url.searchParams.set("api_key", apiKey);
+    url.searchParams.set("limit", "5");
 
+    const resp = await fetch(url.toString());
     if (!resp.ok) continue;
 
     const json = await resp.json();
-    const people: ApolloPerson[] = json.people ?? [];
+    const emails: HunterEmail[] = json.data?.emails ?? [];
 
-    for (const person of people) {
-      if (!person.first_name) continue;
-      await prisma.contact.upsert({
-        where: {
-          id: `apollo-${company.id}-${person.email ?? person.first_name}`,
-        },
-        create: {
-          id: `apollo-${company.id}-${person.email ?? person.first_name}`,
+    const topEmails = emails
+      .filter((e) => e.value && (e.confidence ?? 0) >= 70)
+      .slice(0, 3);
+
+    for (const email of topEmails) {
+      if (!email.value) continue;
+      await prisma.contact.create({
+        data: {
           companyId: company.id,
-          firstName: person.first_name,
-          lastName: person.last_name ?? null,
-          email: person.email ?? null,
-          title: person.title ?? null,
-          linkedIn: person.linkedin_url ?? null,
-          isPrimary: false,
-        },
-        update: {
-          email: person.email ?? undefined,
-          title: person.title ?? undefined,
+          firstName: email.first_name ?? "Contacto",
+          lastName: email.last_name ?? null,
+          email: email.value,
+          title: email.position ?? null,
+          isPrimary: topEmails.indexOf(email) === 0,
         },
       });
     }
 
-    if (people.length > 0) enriched++;
+    if (topEmails.length > 0) enriched++;
   }
 
   return NextResponse.json({ enriched, companies: companies.length });

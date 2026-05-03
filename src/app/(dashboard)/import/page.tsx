@@ -40,11 +40,12 @@ function GoogleMapsSection() {
     <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
       <div className="mb-4 flex items-center gap-2">
         <Search className="h-4 w-4 text-indigo-400" />
-        <h2 className="text-sm font-semibold text-white">Google Maps · Outscraper</h2>
+        <h2 className="text-sm font-semibold text-white">Google Maps · Google Places API</h2>
+        <span className="rounded bg-green-500/20 px-1.5 py-0.5 text-xs text-green-400">Gratis</span>
       </div>
       <p className="mb-4 text-xs text-zinc-400">
-        Busca importadores/exportadores FMCG en Google Maps por país o ciudad. Requiere{" "}
-        <code className="text-indigo-300">OUTSCRAPER_API_KEY</code>.
+        Busca importadores/exportadores FMCG en Google Maps por país o ciudad. Gratis hasta ~5.000 búsquedas/mes.
+        Requiere <code className="text-indigo-300">GOOGLE_PLACES_API_KEY</code>.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -129,11 +130,12 @@ function ApolloSection() {
     <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
       <div className="mb-4 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-indigo-400" />
-        <h2 className="text-sm font-semibold text-white">Enriquecimiento · Apollo.io</h2>
+        <h2 className="text-sm font-semibold text-white">Emails · Hunter.io</h2>
+        <span className="rounded bg-green-500/20 px-1.5 py-0.5 text-xs text-green-400">Gratis</span>
       </div>
       <p className="mb-4 text-xs text-zinc-400">
-        Añade contactos (nombre, email, cargo) a las empresas que ya tienes en base de datos pero sin email de contacto.
-        Requiere <code className="text-indigo-300">APOLLO_API_KEY</code>.
+        Encuentra emails de contacto en empresas que ya tienes. Gratis hasta 25 dominios/mes.
+        Requiere <code className="text-indigo-300">HUNTER_API_KEY</code>.
       </p>
 
       <div className="mb-4 rounded border border-zinc-800 p-3 text-xs text-zinc-400 space-y-1">
