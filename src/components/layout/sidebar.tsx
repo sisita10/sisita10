@@ -9,8 +9,10 @@ import {
   Upload,
   Settings,
   TrendingUp,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logout } from "@/app/actions/auth";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -30,7 +32,7 @@ export function Sidebar() {
         <span className="text-sm font-semibold text-white">FMCG Leads</span>
       </div>
 
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-col gap-1 flex-1">
         {nav.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
@@ -47,6 +49,16 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
+
+      <form action={logout}>
+        <button
+          type="submit"
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+        >
+          <LogOut className="h-4 w-4" />
+          Cerrar sesión
+        </button>
+      </form>
     </aside>
   );
 }
