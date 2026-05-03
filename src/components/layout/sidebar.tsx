@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Building2,
-  Users,
   Ship,
   Upload,
   Settings,
@@ -14,9 +13,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leads", label: "Leads", icon: Building2 },
-  { href: "/companies", label: "Empresas", icon: Users },
   { href: "/shipments", label: "Envíos", icon: Ship },
   { href: "/import", label: "Importar datos", icon: Upload },
   { href: "/settings", label: "Configuración", icon: Settings },
